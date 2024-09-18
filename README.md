@@ -1,2 +1,1 @@
-# Articles
-A repo dedicated for my blog posts and articles
+If you're here and don't know why, go visit the [article](www.dorbendor.com/posts/articles/unity/scriptableholders/).
