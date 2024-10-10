@@ -1,12 +1,17 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System;
+using UnityEditor.Callbacks;
 
 [CustomPropertyDrawer(typeof(Scene))]
 public class SceneEditor : PropertyDrawer
 {
-    // TODO: give scene editor another look - Popup for int based loading, like in
-    // the attribute for integers. Make this a menuitem
+    // DONE: handle scene renames
+    // DONE: handle scene change dir
+    // DONE: handle build index change
+    // TODO: handle all in build
+    // TODO: handle scene change GUID
+    // TODO: create a Scene view like the integer [ScenePicker].
+    // make it part of the attribute's constructor.
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         // https://docs.unity3d.com/ScriptReference/PropertyDrawer.html
@@ -14,12 +19,15 @@ public class SceneEditor : PropertyDrawer
         // prefab override logic works on the entire property.
         EditorGUI.BeginProperty(position, label, property);
 
-        var relative = property.FindPropertyRelative("_guid");
+        var guidProperty = property.FindPropertyRelative("_guid");
+        var pathProperty = property.FindPropertyRelative("_path");
+        //var nameProperty = property.FindPropertyRelative("_name");
+        //var indexProperty = property.FindPropertyRelative("_index");
+
         // we are using GUID so if the scene changes directory or renamed
         // we can still hold a reference to it
-        var oldScenePath = AssetDatabase.GUIDToAssetPath(relative.stringValue);
-        var pathToSave = oldScenePath;
-        var oldScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(oldScenePath);
+        var oldScenePath = AssetDatabase.GUIDToAssetPath(guidProperty.stringValue);
+        SceneAsset oldScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(oldScenePath);
 
         EditorGUI.BeginChangeCheck();
         var newScene = EditorGUI.ObjectField(position, property.displayName, oldScene, typeof(SceneAsset), false) as SceneAsset;
@@ -27,15 +35,14 @@ public class SceneEditor : PropertyDrawer
         if (EditorGUI.EndChangeCheck())
         {
             var newPath = AssetDatabase.GetAssetPath(newScene);
-            pathToSave = newPath;
             var guid = AssetDatabase.GUIDFromAssetPath(newPath);
 
-            relative.stringValue = guid.ToString();
-
-            var sceneObject = fieldInfo.GetValue(property.serializedObject.targetObject) as Scene;
+            guidProperty.stringValue = guid.ToString();
+            pathProperty.stringValue = newPath.ToString();
         }
 
-        property.FindPropertyRelative("_path").stringValue = pathToSave;
+        //nameProperty.stringValue = newScene.name;
+        //indexProperty.intValue = SceneUtility.GetBuildIndexByScenePath(newPath);
 
         EditorGUI.EndProperty();
     }

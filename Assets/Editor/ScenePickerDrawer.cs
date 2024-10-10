@@ -15,6 +15,17 @@ namespace DBD.UnityCodingTools.Editor
         {
             EditorBuildSettings.sceneListChanged -= BuildListChangedHandler;
             EditorBuildSettings.sceneListChanged += BuildListChangedHandler;
+
+            // This is another way to try and forecbly update all scenes
+            // in the build index with this API
+
+            //foreach (GameObject obj in Object.FindObjectsOfType<GameObject>(true))
+            //{
+            //    EditorUtility.SetDirty(obj);
+            //}
+
+            //// Optionally, call this to refresh the inspector
+            //EditorApplication.RepaintHierarchyWindow();
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -30,6 +41,17 @@ namespace DBD.UnityCodingTools.Editor
 
         private void IntGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            if (EditorSceneManager.sceneCountInBuildSettings == 0)
+            {
+                EditorGUILayout.HelpBox("Cannot present an integer based scene picker if no" +
+                    " scenes were added to the build settings.", MessageType.Info);
+                return;
+            }
+            if (property.intValue >= EditorSceneManager.sceneCountInBuildSettings)
+            {
+                property.intValue = 0;
+            }
+
             var scene = EditorSceneManager.GetSceneByBuildIndex(property.intValue);
             var oldScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(scene.path);
 
@@ -58,7 +80,7 @@ namespace DBD.UnityCodingTools.Editor
 
             if (oldScene != null)
             {
-                EditorPrefs.DeleteKey(property.stringValue);
+                // in case of renaming of the scene
                 property.stringValue = oldScene.name;
                 EditorPrefs.SetString(property.stringValue, savedGUID);
             }
